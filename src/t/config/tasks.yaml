@@ -1,0 +1,62 @@
+Intake_Radiology_Notes_Task:
+  description: >
+    Receive raw written or dictated notes from the radiologist: {raw_note}
+    Clean and prepare them for downstream processing.
+  agent: input_agent
+  expected_output: >
+    Cleaned and standardized version of the following note: {raw_note}
+    Ready for transcription or parsing.
+
+#Transcribe_Audio_Input_Task:
+  #description: >
+    #Convert spoken radiology notes into well-formatted text using speech-to-text, preserving medical language and intent.
+  #agent: transcriber_agent
+  #expected_output: >
+    #Accurate, punctuation-aware text transcription of the dictated input.
+  #optional: true
+
+Parse_Clinical_Sections_Task:
+  description: >
+    Parse the intake text into five standard sections: Titre, Indication, Techniques, Resultat, and Conclusion.
+  agent: parser_agent
+  dependent_tasks: [Intake_Radiology_Notes_Task]
+  expected_output: >
+    Structured content with clearly defined Indication, Techniques, Résultat, and Conclusion sections.
+
+Validate_Medical_Consistency_Task:
+  description: >
+    Ensure the parsed content contains no contradictions or missing key clinical information. Flag and request clarifications if necessary.
+  agent: validator_agent
+  dependent_tasks: [Parse_Clinical_Sections_Task]
+  expected_output: >
+    A validated version of the structured content with issues flagged or resolved.
+
+Format_Report_to_Template_Task:
+  description: >
+    Format the validated content into the standardized .docx radiology report template for output.
+  agent: formatter_agent
+  dependent_tasks: [Validate_Medical_Consistency_Task]
+  expected_output: >
+    A formatted report structure compliant with the radiology report template.
+
+Generate_Final_Report_Task:
+  description: >
+    Finalize the radiology report using polished, clinical language.
+    Do not include any explanations, commentary, or inner thought processes in the output.
+    Do not include <think> tags or anything enclosed within them.
+    
+    Return only the clean, structured report content in plain text, 
+    using the following five labeled sections: 
+    Titre, Indication, Techniques, Resultat, Conclusion.
+
+    Do NOT use markdown formatting (e.g., asterisks, hashes, or bold text).
+    Output must be plain text only, suitable for clinical documentation.
+  agent: writer_agent
+  dependent_tasks: [Format_Report_to_Template_Task]
+  expected_output: >
+    A finalized, clinically accurate radiology report ready for export to the user or integration into an EHR system.
+    The report must contain only the following sections: 
+    Titre, Indication, Techniques, Resultat, Conclusion — clearly labeled and formatted in plain text.
+  output_file_format: .docx
+  output_file: report_final.docx
+
